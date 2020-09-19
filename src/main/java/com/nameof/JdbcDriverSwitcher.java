@@ -1,19 +1,18 @@
 package com.nameof;
 
 import java.sql.Driver;
-import java.sql.DriverManager;
-import java.util.Enumeration;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class JdbcDriverSwitcher {
 
     private Map<DatabaseType, Object> locks;
-    private Map<DatabaseType, Driver> driverMap;
+    private Map<DatabaseType, Driver> driverMap = new HashMap<>(DatabaseType.values().length);;
     private DriverLoader driverLoader = new DriverLoader();
+    private DriverManagerSideCar dm = new DriverManagerSideCar();
 
     public JdbcDriverSwitcher() {
-        driverMap = new HashMap<>(DatabaseType.values().length);
         createLocks();
     }
 
@@ -27,17 +26,26 @@ public class JdbcDriverSwitcher {
     private boolean trySwitchDriver(DatabaseType type, String jarFilePath, String driverClass) throws Exception {
         DriverWrapper wrapper = driverLoader.loadDriver(jarFilePath, driverClass);
 
-        Enumeration<Driver> drivers = DriverManager.getDrivers();
-        while (drivers.hasMoreElements()) {
-            Driver driver = drivers.nextElement();
-            if (driver.getClass().getName().equals(driverClass)) {
-                DriverManager.deregisterDriver(driver);
-            }
-        }
+        // clear default driver
+        dm.deregisterDriverByClassName(driverClass);
 
-        DriverManager.registerDriver(wrapper);
-        DriverManager.deregisterDriver(driverMap.put(type, wrapper));
+        replacePreviousDriver(type, wrapper);
         return true;
+    }
+
+    private void replacePreviousDriver(DatabaseType type, DriverWrapper wrapper) throws SQLException {
+        dm.replaceDriver(driverMap.put(type, wrapper), wrapper);
+    }
+
+    public void unloadDriver(DatabaseType type) throws Exception {
+        Object lock = locks.get(type);
+        synchronized (lock) {
+            dm.unLoadDriver(driverMap.remove(type));
+        }
+    }
+
+    public Driver getCurrentDriver(DatabaseType type) throws Exception {
+        return driverMap.get(type);
     }
 
     private void createLocks() {
