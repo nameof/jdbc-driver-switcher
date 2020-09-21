@@ -44,8 +44,13 @@ public class JdbcDriverSwitcher {
         }
     }
 
-    public Driver getCurrentDriver(DatabaseType type) throws Exception {
+    public Driver getCurrentDriver(DatabaseType type) {
         return driverMap.get(type);
+    }
+
+    public Driver getCurrentRawDriver(DatabaseType type) throws Exception {
+        DriverWrapper wrapper = (DriverWrapper) this.getCurrentDriver(type);
+        return (Driver) ReflectionUtils.getFieldValue(wrapper, "driver");
     }
 
     private void createLocks() {
