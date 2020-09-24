@@ -57,4 +57,8 @@ public class DriverWrapper implements Driver {
     public Logger getParentLogger() throws SQLFeatureNotSupportedException {
         return this.driver.getParentLogger();
     }
+
+    public Driver getDriver() {
+        return driver;
+    }
 }

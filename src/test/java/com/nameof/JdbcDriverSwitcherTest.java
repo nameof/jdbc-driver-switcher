@@ -19,8 +19,7 @@ public class JdbcDriverSwitcherTest {
 
     @Test
     public void testSwitch() throws Exception {
-        JdbcDriverSwitcher switcher = new JdbcDriverSwitcher();
-        switch5145To5149(switcher);
+        switch5145To5149();
 
         Enumeration<Driver> drivers = DriverManager.getDrivers();
         int count = 0;
@@ -30,13 +29,12 @@ public class JdbcDriverSwitcherTest {
         }
         Assert.assertEquals(1, count);
 
-        switcher.unloadDriver(DatabaseType.MYSQL);
+        JdbcDriverSwitcher.getInstance().unloadDriver(DatabaseType.MYSQL);
     }
 
     @Test
     public void testReadData() throws Exception {
-        JdbcDriverSwitcher switcher = new JdbcDriverSwitcher();
-        switch5145To5149(switcher);
+        switch5145To5149();
 
         try (Connection conn = DriverManager.getConnection(JDBC_URL, USER, PASSWORD)) {
             Statement stmt = conn.createStatement();
@@ -48,12 +46,12 @@ public class JdbcDriverSwitcherTest {
             Assert.assertTrue(tables.toString().contains("user"));
         }
 
-        switcher.unloadDriver(DatabaseType.MYSQL);
+        JdbcDriverSwitcher.getInstance().unloadDriver(DatabaseType.MYSQL);
     }
 
     @Test
     public void testEnsureDriverLocation() throws Exception {
-        JdbcDriverSwitcher switcher = new JdbcDriverSwitcher();
+        JdbcDriverSwitcher switcher = JdbcDriverSwitcher.getInstance();
 
         File jar5145File = new File(JAR_FILEDIR, MYSQL5145);
         switcher.switchToDriver(DatabaseType.MYSQL, jar5145File.getAbsolutePath(), DRIVER_CLASS);
@@ -66,7 +64,9 @@ public class JdbcDriverSwitcherTest {
         switcher.unloadDriver(DatabaseType.MYSQL);
     }
 
-    private void switch5145To5149(JdbcDriverSwitcher switcher) throws Exception {
+    private void switch5145To5149() throws Exception {
+        JdbcDriverSwitcher switcher = JdbcDriverSwitcher.getInstance();
+
         File jar5145File = new File(JAR_FILEDIR, MYSQL5145);
         switcher.switchToDriver(DatabaseType.MYSQL, jar5145File.getAbsolutePath(), DRIVER_CLASS);
 
