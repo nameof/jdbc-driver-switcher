@@ -1,6 +1,8 @@
 package com.nameof;
 
+import java.sql.Connection;
 import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,21 +27,29 @@ public class JdbcDriverSwitcher {
         return INSTANCE;
     }
 
-    public boolean switchToDriver(DatabaseType type, String jarFilePath, String driverClass) throws Exception {
+    public Connection getConnection(DatabaseType type, String jarFilePath, String driverClass
+            , String url, String user, String password) throws Exception {
         Object lock = locks.get(type);
         synchronized (lock) {
-            return trySwitchDriver(type, jarFilePath, driverClass);
+            try {
+                switchToDriver(type, jarFilePath, driverClass);
+                return DriverManager.getConnection(url, user, password);
+            } finally {
+                unloadDriver(type);
+            }
         }
     }
 
-    private boolean trySwitchDriver(DatabaseType type, String jarFilePath, String driverClass) throws Exception {
-        DriverWrapper wrapper = driverLoader.loadDriver(jarFilePath, driverClass);
+    public void switchToDriver(DatabaseType type, String jarFilePath, String driverClass) throws Exception {
+        Object lock = locks.get(type);
+        synchronized (lock) {
+            DriverWrapper wrapper = driverLoader.loadDriver(jarFilePath, driverClass);
 
-        // clear default driver
-        dm.deregisterDriverByClassName(driverClass);
+            // clear default driver
+            dm.deregisterDriverByClassName(driverClass);
 
-        replacePreviousDriver(type, wrapper);
-        return true;
+            replacePreviousDriver(type, wrapper);
+        }
     }
 
     private void replacePreviousDriver(DatabaseType type, DriverWrapper wrapper) throws SQLException {

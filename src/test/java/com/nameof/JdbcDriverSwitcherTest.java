@@ -50,18 +50,32 @@ public class JdbcDriverSwitcherTest {
     }
 
     @Test
-    public void testEnsureDriverLocation() throws Exception {
+    public void testSwitchEnsureDriverLocation() throws Exception {
         JdbcDriverSwitcher switcher = JdbcDriverSwitcher.getInstance();
 
         File jar5145File = new File(JAR_FILEDIR, MYSQL5145);
         switcher.switchToDriver(DatabaseType.MYSQL, jar5145File.getAbsolutePath(), DRIVER_CLASS);
-        assertDriverLocation(MYSQL5145);
+        assertDriverLocation(DriverManager.getConnection(JDBC_URL, USER, PASSWORD), MYSQL5145);
 
         File jar5149File = new File(JAR_FILEDIR, MYSQL5149);
         switcher.switchToDriver(DatabaseType.MYSQL, jar5149File.getAbsolutePath(), DRIVER_CLASS);
-        assertDriverLocation(MYSQL5149);
+        assertDriverLocation(DriverManager.getConnection(JDBC_URL, USER, PASSWORD), MYSQL5149);
 
         switcher.unloadDriver(DatabaseType.MYSQL);
+    }
+
+    @Test
+    public void testGetConnection() throws Exception {
+        JdbcDriverSwitcher switcher = JdbcDriverSwitcher.getInstance();
+        File jar5145File = new File(JAR_FILEDIR, MYSQL5145);
+        Connection conn1 = switcher.getConnection(DatabaseType.MYSQL, jar5145File.getAbsolutePath()
+                , DRIVER_CLASS, JDBC_URL, USER, PASSWORD);
+        assertDriverLocation(conn1, MYSQL5145);
+
+        File jar5149File = new File(JAR_FILEDIR, MYSQL5149);
+        Connection conn2 = switcher.getConnection(DatabaseType.MYSQL, jar5149File.getAbsolutePath()
+                , DRIVER_CLASS, JDBC_URL, USER, PASSWORD);
+        assertDriverLocation(conn2, MYSQL5149);
     }
 
     private void switch5145To5149() throws Exception {
@@ -77,8 +91,8 @@ public class JdbcDriverSwitcherTest {
     /**
      * 断言当前Driver的实现类是否加载于期望的jar文件，即切换Driver是否生效
      */
-    private void assertDriverLocation(String exceptedJarName) throws Exception {
-        try (Connection conn = DriverManager.getConnection(JDBC_URL, USER, PASSWORD)) {
+    private void assertDriverLocation(Connection connection, String exceptedJarName) throws Exception {
+        try (Connection conn = (connection)) {
             Class<? extends Statement> statementClass = conn.createStatement().getClass();
             Assert.assertTrue(statementClass.getProtectionDomain()
                     .getCodeSource().getLocation().toString()
