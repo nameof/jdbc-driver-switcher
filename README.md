@@ -22,6 +22,9 @@ Dynamically switch the JDBC driver during runtime. 运行时切换不同版本�
     String jarFilePath = ""; // jar文件绝对路径
     String driverClass = "com.mysql.jdbc.Driver";
     switcher.switchToDriver(DatabaseType.MYSQL, jarFilePath, driverClass);
-    
     // ... 切换完成，获取连接，读写数据
+
+    // 或者直接从某jar文件加载驱动、获取连接
+    Connection conn = switcher.getConnection(DatabaseType.MYSQL, jarFile.getAbsolutePath()
+                , DRIVER_CLASS, JDBC_URL, USER, PASSWORD);
 ```

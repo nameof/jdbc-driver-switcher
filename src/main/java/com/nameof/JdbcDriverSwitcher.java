@@ -15,9 +15,9 @@ public class JdbcDriverSwitcher {
     private static final JdbcDriverSwitcher INSTANCE = new JdbcDriverSwitcher();
 
     private Map<DatabaseType, Object> locks;
-    private Map<DatabaseType, Driver> driverMap = new HashMap<>(DatabaseType.values().length);;
-    private DriverLoader driverLoader = new DriverLoader();
-    private DriverManagerSideCar dm = new DriverManagerSideCar();
+    private final Map<DatabaseType, Driver> driverMap = new HashMap<>(DatabaseType.values().length);;
+    private final DriverLoader driverLoader = new DriverLoader();
+    private final DriverManagerSideCar dm = new DriverManagerSideCar();
 
     private JdbcDriverSwitcher() {
         createLocks();
